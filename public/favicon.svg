@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <!-- Glow Filter for Neon Pink -->
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2D8E" />
+      <stop offset="100%" stop-color="#FF75B5" />
+    </linearGradient>
+  </defs>
+  <!-- Dark background -->
+  <rect width="100" height="100" rx="22" fill="#121212" />
+  
+  <!-- Stylized F + Hanger / Dumbbell Icon -->
+  <g transform="translate(15, 15) scale(0.7)">
+    <!-- Dumbbell Bar -->
+    <rect x="25" y="42" width="50" height="16" rx="8" fill="url(#neon-grad)" filter="url(#neon-glow)" />
+    
+    <!-- Left Plate -->
+    <rect x="12" y="25" width="13" height="50" rx="6" fill="url(#neon-grad)" filter="url(#neon-glow)" />
+    <rect x="5" y="32" width="7" height="36" rx="3" fill="#ffffff" opacity="0.8" />
+    
+    <!-- Right Plate -->
+    <rect x="75" y="25" width="13" height="50" rx="6" fill="url(#neon-grad)" filter="url(#neon-glow)" />
+    <rect x="88" y="32" width="7" height="36" rx="3" fill="#ffffff" opacity="0.8" />
+    
+    <!-- Hanger Hook (Top of F) -->
+    <path d="M 50,42 C 50,25 62,15 50,10 C 38,15 50,25 50,42 Z" fill="none" stroke="url(#neon-grad)" stroke-width="6" stroke-linecap="round" filter="url(#neon-glow)" />
+  </g>
+</svg>
