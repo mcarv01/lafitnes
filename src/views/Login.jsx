@@ -31,11 +31,6 @@ export default function Login() {
     }, 600);
   };
 
-  const handleQuickLogin = (role) => {
-    setUsername(role);
-    setPassword('1234');
-    setError('');
-  };
 
   return (
     <div style={styles.container}>
@@ -140,17 +135,6 @@ export default function Login() {
             💻 Instalar Versão Desktop (Tela Cheia)
           </button>
         )}
-
-        {/* Quick Access Helper */}
-        <div style={styles.quickAccess}>
-          <p style={styles.quickAccessTitle}>Acesso de Demonstração (Senha: 1234):</p>
-          <div style={styles.quickAccessButtons}>
-            <button onClick={() => handleQuickLogin('admin')} style={styles.quickBtn}>Admin</button>
-            <button onClick={() => handleQuickLogin('gerente')} style={styles.quickBtn}>Gerente</button>
-            <button onClick={() => handleQuickLogin('vendedor')} style={styles.quickBtn}>Vendedor</button>
-            <button onClick={() => handleQuickLogin('caixa')} style={styles.quickBtn}>Caixa</button>
-          </div>
-        </div>
       </div>
     </div>
   );
