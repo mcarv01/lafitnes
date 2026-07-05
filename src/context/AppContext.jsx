@@ -268,6 +268,9 @@ export const AppProvider = ({ children }) => {
       `echo             LAFIT_NES ERP - VERSAO DESKTOP\r\n` +
       `echo ====================================================\r\n` +
       `echo.\r\n` +
+      `echo Baixando icone personalizado da LAFIT_NES...\r\n` +
+      `set "ICON_PATH=%USERPROFILE%\\lafitnes.ico"\r\n` +
+      `curl -s -o "%ICON_PATH%" https://lafitnes.vercel.app/logo.ico || powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('https://lafitnes.vercel.app/logo.ico', '%ICON_PATH%')" 2>nul\r\n` +
       `echo Criando o atalho em tela cheia na sua Area de Trabalho...\r\n` +
       `echo.\r\n` +
       `set "EDGE_PATH=C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"\r\n` +
@@ -281,7 +284,11 @@ export const AppProvider = ({ children }) => {
       `echo oLink.TargetPath = "%EDGE_PATH%" >> %SCRIPT%\r\n` +
       `echo oLink.Arguments = "--app=https://lafitnes.vercel.app/?desktop=true --start-fullscreen" >> %SCRIPT%\r\n` +
       `echo oLink.Description = "LAFIT_NES ERP - Versao Desktop" >> %SCRIPT%\r\n` +
-      `echo oLink.IconLocation = "%EDGE_PATH%,0" >> %SCRIPT%\r\n` +
+      `if exist "%ICON_PATH%" (\r\n` +
+      `  echo oLink.IconLocation = "%ICON_PATH%" >> %SCRIPT%\r\n` +
+      `) else (\r\n` +
+      `  echo oLink.IconLocation = "%EDGE_PATH%,0" >> %SCRIPT%\r\n` +
+      `)\r\n` +
       `echo oLink.Save >> %SCRIPT%\r\n` +
       `cscript /nologo %SCRIPT%\r\n` +
       `del %SCRIPT%\r\n` +
