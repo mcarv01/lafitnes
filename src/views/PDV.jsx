@@ -64,6 +64,10 @@ export default function PDV({ onNavigateToAdmin }) {
 
   const handleCloseCashSubmit = (e) => {
     e.preventDefault();
+    if (!user?.permissions?.operateCash) {
+      alert('ERRO DE PERMISSÃO: Você não tem autorização para fechar o caixa.');
+      return;
+    }
     const report = closeCashRegister({
       money: parseFloat(declaredMoney) || 0,
       pix: parseFloat(declaredPix) || 0,
@@ -364,6 +368,10 @@ export default function PDV({ onNavigateToAdmin }) {
   // Handle Cash Register Opening
   const handleOpenCash = (e) => {
     e.preventDefault();
+    if (!user?.permissions?.operateCash) {
+      alert('ERRO DE PERMISSÃO: Você não tem autorização para realizar operações de caixa (Abertura).');
+      return;
+    }
     openCashRegister(parseFloat(initialCashValue));
   };
 
@@ -496,7 +504,7 @@ export default function PDV({ onNavigateToAdmin }) {
         </div>
 
         <div style={styles.headerRight}>
-          {(user?.role === 'admin' || user?.role === 'manager') && (
+          {user?.permissions?.accessAdmin && (
             <button onClick={onNavigateToAdmin} className="btn btn-secondary" style={styles.navBtn}>
               <LayoutDashboard size={16} /> Dashboard
             </button>
@@ -509,6 +517,10 @@ export default function PDV({ onNavigateToAdmin }) {
 
           <button 
             onClick={() => {
+              if (!user?.permissions?.operateCash) {
+                alert('ERRO DE PERMISSÃO: Você não tem autorização para fechar o caixa.');
+                return;
+              }
               setDeclaredMoney('');
               setDeclaredPix('');
               setDeclaredCard('');
@@ -804,8 +816,15 @@ export default function PDV({ onNavigateToAdmin }) {
                   type="number"
                   className="input-field"
                   value={discountVal || ''}
-                  onChange={(e) => setDiscountVal(parseFloat(e.target.value) || 0)}
-                  style={{ width: '80px', padding: '6px', fontSize: '0.8rem', textAlign: 'right' }}
+                  onChange={(e) => {
+                    if (!user?.permissions?.applyDiscounts) {
+                      alert('ERRO DE PERMISSÃO: Você não tem autorização para aplicar descontos manuais.');
+                      return;
+                    }
+                    setDiscountVal(parseFloat(e.target.value) || 0);
+                  }}
+                  disabled={!user?.permissions?.applyDiscounts}
+                  style={{ width: '80px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', opacity: user?.permissions?.applyDiscounts ? 1 : 0.5 }}
                 />
               </div>
 
@@ -862,16 +881,30 @@ export default function PDV({ onNavigateToAdmin }) {
           {/* Quick Cash Operations */}
           <div style={styles.quickCashRow}>
             <button 
-              onClick={() => { setCashTxType('suprimento'); setShowCashModal(true); }}
+              onClick={() => {
+                if (!user?.permissions?.operateCash) {
+                  alert('ERRO DE PERMISSÃO: Você não tem autorização para realizar operações de caixa (Suprimento).');
+                  return;
+                }
+                setCashTxType('suprimento');
+                setShowCashModal(true);
+              }}
               className="btn btn-secondary" 
-              style={{ flex: 1, fontSize: '0.75rem', gap: '4px' }}
+              style={{ flex: 1, fontSize: '0.75rem', gap: '4px', opacity: user?.permissions?.operateCash ? 1 : 0.5 }}
             >
               <ArrowDownRight size={14} color="var(--success)" /> Suprimento
             </button>
             <button 
-              onClick={() => { setCashTxType('sangria'); setShowCashModal(true); }}
+              onClick={() => {
+                if (!user?.permissions?.operateCash) {
+                  alert('ERRO DE PERMISSÃO: Você não tem autorização para realizar operações de caixa (Sangria).');
+                  return;
+                }
+                setCashTxType('sangria');
+                setShowCashModal(true);
+              }}
               className="btn btn-secondary" 
-              style={{ flex: 1, fontSize: '0.75rem', gap: '4px' }}
+              style={{ flex: 1, fontSize: '0.75rem', gap: '4px', opacity: user?.permissions?.operateCash ? 1 : 0.5 }}
             >
               <ArrowUpRight size={14} color="var(--danger)" /> Sangria
             </button>

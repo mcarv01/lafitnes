@@ -36,11 +36,76 @@ const initialPromotions = [
   { id: 'promo-3', name: 'Kit Fitness Verão', type: 'kit', description: 'Legging + Top por R$ 199,90.', active: true, value: 199.90, category1: 'Leggings', category2: 'Tops' }
 ];
 
+const initialUsers = [
+  {
+    id: 'usr-admin',
+    username: 'admin',
+    name: 'Administrador Master',
+    passwordHash: hashPassword('1234'),
+    role: 'admin',
+    permissions: {
+      accessAdmin: true,
+      accessPDV: true,
+      operateCash: true,
+      cancelSales: true,
+      applyDiscounts: true
+    }
+  },
+  {
+    id: 'usr-manager',
+    username: 'gerente',
+    name: 'Gerente da Loja',
+    passwordHash: hashPassword('1234'),
+    role: 'manager',
+    permissions: {
+      accessAdmin: true,
+      accessPDV: true,
+      operateCash: true,
+      cancelSales: true,
+      applyDiscounts: true
+    }
+  },
+  {
+    id: 'usr-seller',
+    username: 'vendedor',
+    name: 'Vendedor Padrão',
+    passwordHash: hashPassword('1234'),
+    role: 'seller',
+    permissions: {
+      accessAdmin: false,
+      accessPDV: true,
+      operateCash: false,
+      cancelSales: false,
+      applyDiscounts: true
+    }
+  },
+  {
+    id: 'usr-cashier',
+    username: 'caixa',
+    name: 'Operador de Caixa',
+    passwordHash: hashPassword('1234'),
+    role: 'cashier',
+    permissions: {
+      accessAdmin: false,
+      accessPDV: true,
+      operateCash: true,
+      cancelSales: false,
+      applyDiscounts: false
+    }
+  }
+];
+
 export const AppProvider = ({ children }) => {
   // Authentication State
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('fitstore_user');
     return decryptLocalData(saved, null);
+  });
+
+  // Users Database State
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('fitstore_users');
+    return decryptLocalData(saved, initialUsers);
   });
 
   // ERP Core States
@@ -146,6 +211,10 @@ export const AppProvider = ({ children }) => {
   }, [user]);
 
   useEffect(() => {
+    localStorage.setItem('fitstore_users', encryptLocalData(users));
+  }, [users]);
+
+  useEffect(() => {
     localStorage.setItem('fitstore_products', encryptLocalData(products));
   }, [products]);
 
@@ -195,25 +264,98 @@ export const AppProvider = ({ children }) => {
 
   // LOGIN & LOGOUT
   const login = (username, password) => {
-    const role = username.toLowerCase();
-    const correctHash = hashPassword('1234');
-    const inputHash = hashPassword(password);
+    const u = username.toLowerCase().trim();
+    const foundUser = users.find(usr => usr.username.toLowerCase() === u);
     
-    if (['admin', 'gerente', 'vendedor', 'caixa'].includes(role) && inputHash === correctHash) {
-      let resolvedRole = 'vendedor';
-      if (role === 'admin') resolvedRole = 'admin';
-      if (role === 'gerente') resolvedRole = 'manager';
-      if (role === 'caixa') resolvedRole = 'cashier';
-
-      const loggedUser = {
-        name: role.charAt(0).toUpperCase() + role.slice(1),
-        role: resolvedRole,
-        id: role === 'admin' ? 'usr-admin' : role === 'gerente' ? 'usr-manager' : role === 'vendedor' ? 'sel-1' : 'sel-3'
-      };
-      setUser(loggedUser);
-      return { success: true, user: loggedUser };
+    if (!foundUser) {
+      return { success: false, message: 'Usuário não cadastrado no sistema.' };
     }
-    return { success: false, message: 'Usuário ou senha inválidos. Dica: use "admin", "gerente", "vendedor" ou "caixa" com senha "1234".' };
+    
+    const inputHash = hashPassword(password);
+    if (foundUser.passwordHash !== inputHash) {
+      return { success: false, message: 'Senha incorreta para este usuário.' };
+    }
+
+    const loggedUser = {
+      id: foundUser.id,
+      username: foundUser.username,
+      name: foundUser.name,
+      role: foundUser.role,
+      permissions: foundUser.permissions || {
+        accessAdmin: foundUser.role === 'admin' || foundUser.role === 'manager',
+        accessPDV: true,
+        operateCash: foundUser.role !== 'seller',
+        cancelSales: foundUser.role === 'admin' || foundUser.role === 'manager',
+        applyDiscounts: foundUser.role !== 'cashier'
+      }
+    };
+    
+    setUser(loggedUser);
+    return { success: true, user: loggedUser };
+  };
+
+  const saveUser = (userObj) => {
+    setUsers(prev => {
+      const exists = prev.find(u => u.id === userObj.id);
+      if (exists) {
+        return prev.map(u => {
+          if (u.id === userObj.id) {
+            const updated = {
+              ...u,
+              username: userObj.username,
+              name: userObj.name,
+              role: userObj.role,
+              permissions: userObj.permissions
+            };
+            if (userObj.password) {
+              updated.passwordHash = hashPassword(userObj.password);
+            }
+            return updated;
+          }
+          return u;
+        });
+      } else {
+        const newUser = {
+          id: `usr-${Date.now()}`,
+          username: userObj.username,
+          name: userObj.name,
+          role: userObj.role,
+          permissions: userObj.permissions,
+          passwordHash: hashPassword(userObj.password || '1234')
+        };
+        return [...prev, newUser];
+      }
+    });
+  };
+
+  const deleteUser = (userId) => {
+    if (userId === 'usr-admin') {
+      alert('Segurança: O usuário administrador principal (admin) não pode ser excluído.');
+      return;
+    }
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
+  const changeUserPassword = (userId, oldPassword, newPassword) => {
+    let success = false;
+    let message = '';
+    
+    setUsers(prev => {
+      const targetUser = prev.find(u => u.id === userId);
+      if (!targetUser) {
+        message = 'Usuário não encontrado.';
+        return prev;
+      }
+      if (targetUser.passwordHash !== hashPassword(oldPassword)) {
+        message = 'Senha atual incorreta.';
+        return prev;
+      }
+      success = true;
+      message = 'Senha alterada com sucesso!';
+      return prev.map(u => u.id === userId ? { ...u, passwordHash: hashPassword(newPassword) } : u);
+    });
+    
+    return { success, message };
   };
 
   const logout = () => {
@@ -698,8 +840,12 @@ export const AppProvider = ({ children }) => {
       purchases,
       suppliers,
       cashShifts,
+      users,
       login,
       logout,
+      saveUser,
+      deleteUser,
+      changeUserPassword,
       openCashRegister,
       closeCashRegister,
       addCashTransaction,
@@ -722,7 +868,8 @@ export const AppProvider = ({ children }) => {
       setCashRegister,
       setCoupons,
       setPurchases,
-      setCashShifts
+      setCashShifts,
+      setUsers
     }}>
       {children}
     </AppContext.Provider>

@@ -17,6 +17,7 @@ export default function Admin({ onNavigateToPDV }) {
     coupons, promotions, settings, askAI, saveProduct, saveCustomer,
     purchases, suppliers, savePurchase, saveSupplier, cashShifts, setCashShifts,
     savePromotion, deletePromotion,
+    users, saveUser, deleteUser, changeUserPassword, user,
     setPromotions, setProducts, setCustomers, setSellers, setSales, setFinances, setCashRegister, setCoupons, setPurchases, setSettings
   } = useApp();
 
@@ -57,6 +58,52 @@ export default function Admin({ onNavigateToPDV }) {
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [editingPromo, setEditingPromo] = useState(null);
   const [promoType, setPromoType] = useState('percentage');
+
+  // User Management States
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userRole, setUserRole] = useState('seller');
+  const [userPermissions, setUserPermissions] = useState({
+    accessAdmin: false,
+    accessPDV: true,
+    operateCash: false,
+    cancelSales: false,
+    applyDiscounts: true
+  });
+  
+  // Change Password Form States
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleRoleChange = (role) => {
+    setUserRole(role);
+    if (role === 'admin' || role === 'manager') {
+      setUserPermissions({
+        accessAdmin: true,
+        accessPDV: true,
+        operateCash: true,
+        cancelSales: true,
+        applyDiscounts: true
+      });
+    } else if (role === 'seller') {
+      setUserPermissions({
+        accessAdmin: false,
+        accessPDV: true,
+        operateCash: false,
+        cancelSales: false,
+        applyDiscounts: true
+      });
+    } else if (role === 'cashier') {
+      setUserPermissions({
+        accessAdmin: false,
+        accessPDV: true,
+        operateCash: true,
+        cancelSales: false,
+        applyDiscounts: false
+      });
+    }
+  };
 
   // Calculations for Dashboard
   const totalFaturamento = sales.reduce((acc, s) => acc + s.total, 0);
@@ -318,6 +365,12 @@ export default function Admin({ onNavigateToPDV }) {
             style={{ ...styles.navLink, ...(activeSubTab === 'audits' ? styles.navLinkActive : {}) }}
           >
             <ShieldAlert size={18} /> Auditoria de Caixas
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('users')} 
+            style={{ ...styles.navLink, ...(activeSubTab === 'users' ? styles.navLinkActive : {}) }}
+          >
+            <Users size={18} /> Usuários & Permissões
           </button>
           <button 
             onClick={() => setActiveSubTab('settings')} 
@@ -1391,6 +1444,180 @@ export default function Admin({ onNavigateToPDV }) {
             </div>
           </div>
         )}
+
+        {/* USERS & PERMISSIONS TAB */}
+        {activeSubTab === 'users' && (
+          <div className="animate-fade-in" style={styles.tabContent}>
+            <div style={styles.contentHeader}>
+              <div>
+                <h2>Usuários & Controle de Permissões</h2>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Gerencie contas de operadores, gerentes e suas permissões de tela/caixa</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setEditingUser(null);
+                  setUserRole('seller');
+                  setUserPermissions({
+                    accessAdmin: false,
+                    accessPDV: true,
+                    operateCash: false,
+                    cancelSales: false,
+                    applyDiscounts: true
+                  });
+                  setShowUserModal(true);
+                }} 
+                className="btn btn-primary"
+              >
+                <Plus size={16} /> Novo Usuário
+              </button>
+            </div>
+
+            <div className="grid-2">
+              {/* Coluna Esquerda: Alterar Senha */}
+              <div className="glass-card" style={{ padding: '20px', alignSelf: 'flex-start' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '8px' }}>Segurança de Login</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                  Altere a sua senha de acesso ao painel ou PDV. A nova senha entrará em vigor imediatamente.
+                </p>
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (newPassword !== confirmPassword) {
+                      alert('ERRO: As novas senhas não coincidem!');
+                      return;
+                    }
+                    if (newPassword.length < 4) {
+                      alert('ERRO: A senha deve ter pelo menos 4 caracteres.');
+                      return;
+                    }
+                    const res = changeUserPassword(user.id, oldPassword, newPassword);
+                    if (res.success) {
+                      alert('Senha atualizada com sucesso!');
+                      setOldPassword('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    } else {
+                      alert('ERRO: ' + res.message);
+                    }
+                  }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
+                  <div className="form-group">
+                    <label className="form-label">Senha Atual</label>
+                    <input 
+                      type="password" 
+                      className="input-field" 
+                      placeholder="Sua senha atual" 
+                      value={oldPassword} 
+                      onChange={(e) => setOldPassword(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Nova Senha</label>
+                    <input 
+                      type="password" 
+                      className="input-field" 
+                      placeholder="Nova senha (min. 4 digitos)" 
+                      value={newPassword} 
+                      onChange={(e) => setNewPassword(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Confirmar Nova Senha</label>
+                    <input 
+                      type="password" 
+                      className="input-field" 
+                      placeholder="Confirme a nova senha" 
+                      value={confirmPassword} 
+                      onChange={(e) => setConfirmPassword(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-secondary" style={{ width: '100%', marginTop: '8px' }}>
+                    Atualizar Minha Senha
+                  </button>
+                </form>
+              </div>
+
+              {/* Coluna Direita: Listagem de Usuários */}
+              <div className="glass-card" style={{ padding: '20px' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '16px' }}>Usuários Cadastrados</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {users?.map(usr => (
+                    <div 
+                      key={usr.id} 
+                      style={{ 
+                        padding: '16px', 
+                        borderRadius: '12px', 
+                        background: 'var(--bg-tertiary)', 
+                        border: '1px solid var(--border-color)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{usr.name}</span>
+                          <span className="badge badge-pink" style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                            {usr.role === 'admin' ? 'Admin' : usr.role === 'manager' ? 'Gerente' : usr.role === 'seller' ? 'Vendedor' : 'Caixa'}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Usuário: @{usr.username}</p>
+                        
+                        {/* Permissões tags */}
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
+                          {usr.permissions?.accessAdmin && <span className="badge" style={{ fontSize: '0.55rem', background: 'rgba(0,255,255,0.1)', color: '#00ffff' }}>Admin Panel</span>}
+                          {usr.permissions?.accessPDV && <span className="badge" style={{ fontSize: '0.55rem', background: 'rgba(0,255,255,0.1)', color: '#00ffff' }}>PDV</span>}
+                          {usr.permissions?.operateCash && <span className="badge" style={{ fontSize: '0.55rem', background: 'rgba(0,255,255,0.1)', color: '#00ffff' }}>Caixa</span>}
+                          {usr.permissions?.cancelSales && <span className="badge" style={{ fontSize: '0.55rem', background: 'rgba(0,255,255,0.1)', color: '#00ffff' }}>Cancelar</span>}
+                          {usr.permissions?.applyDiscounts && <span className="badge" style={{ fontSize: '0.55rem', background: 'rgba(0,255,255,0.1)', color: '#00ffff' }}>Desconto</span>}
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          onClick={() => {
+                            setEditingUser(usr);
+                            setUserRole(usr.role);
+                            setUserPermissions(usr.permissions || {
+                              accessAdmin: usr.role === 'admin' || usr.role === 'manager',
+                              accessPDV: true,
+                              operateCash: usr.role !== 'seller',
+                              cancelSales: usr.role === 'admin' || usr.role === 'manager',
+                              applyDiscounts: usr.role !== 'cashier'
+                            });
+                            setShowUserModal(true);
+                          }}
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                        >
+                          Editar
+                        </button>
+                        {usr.id !== 'usr-admin' && (
+                          <button 
+                            onClick={() => {
+                              if (window.confirm(`Deseja excluir permanentemente o usuário "${usr.name}"?`)) {
+                                deleteUser(usr.id);
+                              }
+                            }}
+                            className="btn btn-ghost"
+                            style={{ padding: '6px 10px', color: 'var(--danger)' }}
+                          >
+                            Excluir
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* PRODUCT CONFIGURATION MODAL (WITH MATRIX GRADE EDIT) */}
@@ -2072,6 +2299,176 @@ export default function Admin({ onNavigateToPDV }) {
 
               <button type="submit" className="btn btn-primary btn-large" style={{ width: '100%', marginTop: '12px' }}>
                 Salvar Campanha
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* USER CONFIGURATION MODAL */}
+      {showUserModal && (
+        <div style={styles.modalOverlay}>
+          <div className="glass-card animate-fade-in" style={styles.productModal}>
+            <div style={styles.scannerHeader}>
+              <h3>{editingUser ? 'Editar Usuário' : 'Cadastrar Novo Usuário'}</h3>
+              <button onClick={() => setShowUserModal(false)} style={styles.modalCloseBtn}><X size={18} /></button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const name = formData.get('name');
+              const username = formData.get('username');
+              const role = formData.get('role');
+              const password = formData.get('password');
+
+              if (!editingUser && !password) {
+                alert('A senha é obrigatória para novos usuários.');
+                return;
+              }
+
+              const userObj = {
+                id: editingUser?.id || null,
+                name,
+                username,
+                role,
+                password,
+                permissions: userPermissions
+              };
+
+              saveUser(userObj);
+              setShowUserModal(false);
+              alert('Usuário salvo com sucesso!');
+            }} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              
+              <div className="form-group">
+                <label className="form-label">Nome Completo</label>
+                <input 
+                  type="text" 
+                  name="name" 
+                  className="input-field" 
+                  defaultValue={editingUser?.name || ''} 
+                  required 
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">Nome de Usuário (Login)</label>
+                  <input 
+                    type="text" 
+                    name="username" 
+                    className="input-field" 
+                    defaultValue={editingUser?.username || ''} 
+                    placeholder="Ex: joao.fit"
+                    required 
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">Cargo / Função</label>
+                  <select 
+                    name="role" 
+                    className="input-field" 
+                    value={userRole}
+                    onChange={(e) => handleRoleChange(e.target.value)}
+                    style={{ background: '#121212' }}
+                    required
+                  >
+                    <option value="admin">Administrador Master</option>
+                    <option value="manager">Gerente Geral</option>
+                    <option value="seller">Vendedor</option>
+                    <option value="cashier">Operador de Caixa</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  {editingUser ? 'Senha (Deixe em branco para manter a atual)' : 'Senha de Acesso'}
+                </label>
+                <input 
+                  type="password" 
+                  name="password" 
+                  className="input-field" 
+                  placeholder={editingUser ? 'Senha inalterada' : 'Mínimo 4 dígitos'}
+                  required={!editingUser} 
+                />
+              </div>
+
+              {/* PERMISSIONS CHECKBOXES */}
+              <div style={{ marginTop: '10px' }}>
+                <label className="form-label" style={{ marginBottom: '8px' }}>Permissões Específicas do Usuário</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id="perm-admin" 
+                      checked={userPermissions.accessAdmin}
+                      onChange={(e) => setUserPermissions({ ...userPermissions, accessAdmin: e.target.checked })}
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    <label htmlFor="perm-admin" style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <strong>Acesso ao Painel Admin:</strong> Visualizar dashboards, estoque e DRE financeira.
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id="perm-pdv" 
+                      checked={userPermissions.accessPDV}
+                      onChange={(e) => setUserPermissions({ ...userPermissions, accessPDV: e.target.checked })}
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    <label htmlFor="perm-pdv" style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <strong>Acesso ao PDV:</strong> Abrir interface de vendas e operar sacola.
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id="perm-cash" 
+                      checked={userPermissions.operateCash}
+                      onChange={(e) => setUserPermissions({ ...userPermissions, operateCash: e.target.checked })}
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    <label htmlFor="perm-cash" style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <strong>Operar Movimentação de Caixa:</strong> Realizar sangrias, suprimentos e fechamento cego.
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id="perm-cancel" 
+                      checked={userPermissions.cancelSales}
+                      onChange={(e) => setUserPermissions({ ...userPermissions, cancelSales: e.target.checked })}
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    <label htmlFor="perm-cancel" style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <strong>Cancelar Vendas:</strong> Deletar e estornar vendas finalizadas.
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id="perm-discounts" 
+                      checked={userPermissions.applyDiscounts}
+                      onChange={(e) => setUserPermissions({ ...userPermissions, applyDiscounts: e.target.checked })}
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    <label htmlFor="perm-discounts" style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <strong>Dar Descontos Manuais:</strong> Editar preço de itens ou aplicar desconto no carrinho.
+                    </label>
+                  </div>
+
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-primary btn-large" style={{ width: '100%', marginTop: '12px' }}>
+                Salvar Usuário
               </button>
             </form>
           </div>
