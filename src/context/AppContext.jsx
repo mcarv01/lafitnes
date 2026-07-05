@@ -258,6 +258,52 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('fitstore_shifts', encryptLocalData(cashShifts));
   }, [cashShifts]);
 
+  const isDesktopMode = new URLSearchParams(window.location.search).get('desktop') === 'true' || 
+                        window.matchMedia('(display-mode: standalone)').matches;
+
+  const downloadDesktopLauncher = () => {
+    const scriptText = `@echo off\r\n` +
+      `title LAFIT_NES ERP - Instalador de Atalho\r\n` +
+      `echo ====================================================\r\n` +
+      `echo             LAFIT_NES ERP - VERSAO DESKTOP\r\n` +
+      `echo ====================================================\r\n` +
+      `echo.\r\n` +
+      `echo Criando o atalho em tela cheia na sua Area de Trabalho...\r\n` +
+      `echo.\r\n` +
+      `set SCRIPT="%TEMP%\\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"\r\n` +
+      `set SHORTCUT="%USERPROFILE%\\Desktop\\LAFIT_NES ERP.lnk"\r\n` +
+      `echo Set oWS = WScript.CreateObject("WScript.Shell") >> %SCRIPT%\r\n` +
+      `echo sLinkFile = %SHORTCUT% >> %SCRIPT%\r\n` +
+      `echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%\r\n` +
+      `echo oLink.TargetPath = "msedge.exe" >> %SCRIPT%\r\n` +
+      `echo oLink.Arguments = "--app=https://lafitnes.vercel.app/?desktop=true --start-fullscreen" >> %SCRIPT%\r\n` +
+      `echo oLink.Description = "LAFIT_NES ERP - Versao Desktop" >> %SCRIPT%\r\n` +
+      `echo oLink.IconLocation = "%SystemRoot%\\System32\\shell32.dll,44" >> %SCRIPT%\r\n` +
+      `echo oLink.Save >> %SCRIPT%\r\n` +
+      `cscript /nologo %SCRIPT%\r\n` +
+      `del %SCRIPT%\r\n` +
+      `echo.\r\n` +
+      `echo ====================================================\r\n` +
+      `echo  SUCESSO! Atalho "LAFIT_NES ERP" criado no seu Desktop!\r\n` +
+      `echo  Use o novo icone na Area de Trabalho para abrir o\r\n` +
+      `echo  sistema em modo programa de tela cheia.\r\n` +
+      `echo ====================================================\r\n` +
+      `echo.\r\n` +
+      `pause\r\n` +
+      `exit\r\n`;
+
+    const blob = new Blob([scriptText], { type: 'application/x-bat' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Instalar_LAFIT_NES_Desktop.bat';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    alert('Pronto! O instalador "Instalar_LAFIT_NES_Desktop.bat" foi baixado. Execute-o no seu computador Windows para criar o atalho oficial do programa em tela cheia na sua Área de Trabalho.');
+  };
+
   useEffect(() => {
     localStorage.setItem('fitstore_suppliers', encryptLocalData(suppliers));
   }, [suppliers]);
@@ -869,7 +915,9 @@ export const AppProvider = ({ children }) => {
       setCoupons,
       setPurchases,
       setCashShifts,
-      setUsers
+      setUsers,
+      isDesktopMode,
+      downloadDesktopLauncher
     }}>
       {children}
     </AppContext.Provider>

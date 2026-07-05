@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { KeyRound, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function Login() {
-  const { login } = useApp();
+  const { login, isDesktopMode, downloadDesktopLauncher } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +39,14 @@ export default function Login() {
 
   return (
     <div style={styles.container}>
+      {!isDesktopMode && (
+        <button 
+          onClick={downloadDesktopLauncher} 
+          style={styles.desktopDownloadBtn}
+        >
+          💻 Baixar Versão Desktop
+        </button>
+      )}
       <div className="glass-card animate-fade-in" style={styles.card}>
         {/* Logo and Title */}
         <div style={styles.logoHeader}>
@@ -285,6 +293,23 @@ const styles = {
     fontSize: '0.75rem',
     cursor: 'pointer',
     transition: 'var(--transition)'
+  },
+  desktopDownloadBtn: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    fontSize: '0.8rem',
+    gap: '8px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.03)',
+    color: 'var(--text-secondary)',
+    padding: '10px 20px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'var(--transition)',
+    fontWeight: '500'
   }
 };
 // Hover effects using standard inline logic or selectors in CSS

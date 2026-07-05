@@ -18,6 +18,7 @@ export default function Admin({ onNavigateToPDV }) {
     purchases, suppliers, savePurchase, saveSupplier, cashShifts, setCashShifts,
     savePromotion, deletePromotion,
     users, saveUser, deleteUser, changeUserPassword, user,
+    isDesktopMode, downloadDesktopLauncher,
     setPromotions, setProducts, setCustomers, setSellers, setSales, setFinances, setCashRegister, setCoupons, setPurchases, setSettings
   } = useApp();
 
@@ -381,6 +382,15 @@ export default function Admin({ onNavigateToPDV }) {
         </nav>
 
         <div style={styles.sidebarFooter}>
+          {!isDesktopMode && (
+            <button 
+              onClick={downloadDesktopLauncher} 
+              className="btn btn-secondary" 
+              style={{ width: '100%', marginBottom: '8px', gap: '6px', borderColor: 'var(--neon-pink)', color: 'white', fontSize: '0.8rem' }}
+            >
+              💻 Versão Desktop
+            </button>
+          )}
           <button onClick={onNavigateToPDV} className="btn btn-primary" style={{ width: '100%', gap: '6px' }}>
             <ArrowLeft size={16} /> Ir para o PDV
           </button>

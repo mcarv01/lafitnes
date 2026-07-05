@@ -10,7 +10,7 @@ export default function PDV({ onNavigateToAdmin }) {
   const { 
     user, logout, products, customers, cashRegister, openCashRegister, 
     closeCashRegister, addCashTransaction, addSale, coupons, saveCustomer, settings,
-    promotions
+    promotions, isDesktopMode, downloadDesktopLauncher
   } = useApp();
 
   // PDV States
@@ -504,6 +504,15 @@ export default function PDV({ onNavigateToAdmin }) {
         </div>
 
         <div style={styles.headerRight}>
+          {!isDesktopMode && (
+            <button 
+              onClick={downloadDesktopLauncher} 
+              className="btn btn-secondary" 
+              style={{ ...styles.navBtn, borderColor: 'var(--neon-pink)', color: 'white', gap: '6px' }}
+            >
+              💻 Versão Desktop
+            </button>
+          )}
           {user?.permissions?.accessAdmin && (
             <button onClick={onNavigateToAdmin} className="btn btn-secondary" style={styles.navBtn}>
               <LayoutDashboard size={16} /> Dashboard
