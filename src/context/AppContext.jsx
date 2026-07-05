@@ -275,9 +275,8 @@ export const AppProvider = ({ children }) => {
       `  set "EDGE_PATH=%%b"\r\n` +
       `)\r\n` +
       `set SCRIPT="%TEMP%\\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"\r\n` +
-      `set SHORTCUT="%USERPROFILE%\\Desktop\\LAFIT_NES ERP.lnk"\r\n` +
       `echo Set oWS = WScript.CreateObject("WScript.Shell") >> %SCRIPT%\r\n` +
-      `echo sLinkFile = %SHORTCUT% >> %SCRIPT%\r\n` +
+      `echo sLinkFile = oWS.SpecialFolders("Desktop") ^& "\\LAFIT_NES ERP.lnk" >> %SCRIPT%\r\n` +
       `echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%\r\n` +
       `echo oLink.TargetPath = "%EDGE_PATH%" >> %SCRIPT%\r\n` +
       `echo oLink.Arguments = "--app=https://lafitnes.vercel.app/?desktop=true --start-fullscreen" >> %SCRIPT%\r\n` +
