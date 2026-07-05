@@ -131,6 +131,16 @@ export default function Login() {
           </button>
         </form>
 
+        {!isDesktopMode && (
+          <button 
+            onClick={downloadDesktopLauncher} 
+            className="btn btn-secondary" 
+            style={{ width: '100%', marginTop: '16px', gap: '8px', fontSize: '0.85rem', borderColor: 'var(--neon-pink)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 0', borderRadius: '12px' }}
+          >
+            💻 Instalar Versão Desktop (Tela Cheia)
+          </button>
+        )}
+
         {/* Quick Access Helper */}
         <div style={styles.quickAccess}>
           <p style={styles.quickAccessTitle}>Acesso de Demonstração (Senha: 1234):</p>

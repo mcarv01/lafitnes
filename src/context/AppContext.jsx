@@ -270,15 +270,19 @@ export const AppProvider = ({ children }) => {
       `echo.\r\n` +
       `echo Criando o atalho em tela cheia na sua Area de Trabalho...\r\n` +
       `echo.\r\n` +
+      `set "EDGE_PATH=C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"\r\n` +
+      `for /f "tokens=2*" %%a in ('reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe" /ve 2^>nul') do (\r\n` +
+      `  set "EDGE_PATH=%%b"\r\n` +
+      `)\r\n` +
       `set SCRIPT="%TEMP%\\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"\r\n` +
       `set SHORTCUT="%USERPROFILE%\\Desktop\\LAFIT_NES ERP.lnk"\r\n` +
       `echo Set oWS = WScript.CreateObject("WScript.Shell") >> %SCRIPT%\r\n` +
       `echo sLinkFile = %SHORTCUT% >> %SCRIPT%\r\n` +
       `echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%\r\n` +
-      `echo oLink.TargetPath = "msedge.exe" >> %SCRIPT%\r\n` +
+      `echo oLink.TargetPath = "%EDGE_PATH%" >> %SCRIPT%\r\n` +
       `echo oLink.Arguments = "--app=https://lafitnes.vercel.app/?desktop=true --start-fullscreen" >> %SCRIPT%\r\n` +
       `echo oLink.Description = "LAFIT_NES ERP - Versao Desktop" >> %SCRIPT%\r\n` +
-      `echo oLink.IconLocation = "%SystemRoot%\\System32\\shell32.dll,44" >> %SCRIPT%\r\n` +
+      `echo oLink.IconLocation = "%EDGE_PATH%,0" >> %SCRIPT%\r\n` +
       `echo oLink.Save >> %SCRIPT%\r\n` +
       `cscript /nologo %SCRIPT%\r\n` +
       `del %SCRIPT%\r\n` +
